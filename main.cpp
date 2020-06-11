@@ -2,6 +2,8 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <sstream>
+
 #include "Command.h"
 
 using namespace std;
@@ -9,65 +11,72 @@ using namespace std;
 vector<int> M;
 vector<int> S;
 
-Command processCmd(string line) {
-    int space, nProc;
-    bool modify;
+
+Command processCmd(string line){
     char type = line[0];
+    istringstream stream(line);
     Command cmd(type);
-    space = line.find(" ");
-    line = line.substr(space+1);
+    string currWord;
+
     switch (type) {
         case 'P': {
-            space = line.find(" ");
-            int nBytes = stoi(line.substr(0, space));
-            line = line.substr(space+1);
-            nProc = stoi(line);
-            //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
+            stream >> currWord;
+
+            int nBytes, nProc;
+
+            stream >> currWord;
+            nBytes = stoi(currWord);
+                
+            stream >> currWord;
+            nProc = stoi(currWord);
             cmd.setP(nBytes, nProc);
             break;
         }
-        
+
         case 'A': {
-            space = line.find(" ");
-            int vDir = stoi(line.substr(0, space));
-            line = line.substr(space+1);
-            space = line.find(" ");
-            nProc = stoi(line.substr(0, space));
-            line = line.substr(space+1);
-            if (stoi(line) == 1) {
-                modify = true;
-            } else {
-                modify = false;
-            }
-            //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
-            cmd.setA(vDir, nProc, modify);
+            stream >> currWord;
+            int vDir, nProc;
+            bool modif;
+
+            stream >> currWord;
+            vDir = stoi(currWord);
+                
+            stream >> currWord;
+            nProc = stoi(currWord);
+
+            stream >> currWord;
+            if(currWord == "1")
+                modif = true;
+            else
+                modif = false;
+                
+            cmd.setA(vDir, nProc, modif);
             break;
         }
-        
-        case 'L': {
-            nProc = stoi(line);
-            //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
+
+        case 'L':{
+            stream >> currWord;
+            int nProc;
+
+            stream >> currWord;
+            nProc = stoi(currWord);
+
             cmd.setL(nProc);
+
             break;
         }
 
         case 'C': {
-            Command cmd(type);
-            cmd.setC(line);
-            //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
+            string output;
+            while (stream >> currWord) {
+                stream >> currWord;
+                if (!output.empty()) // special case: no space before first word
+                        output += ' ';
+                    output += currWord;
+            }
+            cmd.setC(output);
             break;
         }
-            
-        case 'E': {
-            Command cmd(type);
-            break;
-        }
-            
-        case 'F': {
-            Command cmd(type);
-            break;
-        }
-            
         default:
             cout << "The command " << type << " " << line << "is invalid" << endl;
             exit(0);
