@@ -6,6 +6,9 @@
 
 using namespace std;
 
+vector<int> M;
+vector<int> S;
+
 Command processCmd(string line) {
     int space, nProc;
     bool modify;
@@ -99,18 +102,42 @@ void processA(){
     //WIP
 }
 
-void processL(){
-    //WIP
+void processL(int nProc){
+    cout << "Liberar los marcos de pagina ocupados por el proceso " << nProc << endl;
+    vector<int> freed;
+    for (int i = 0; i < M.size(); i++) {
+        if (M[i] == nProc) {
+            M[i] = -1;
+            freed.push_back(i);
+        }
+    }
+    if (!freed.empty()) {
+        cout << "Se liberan los marcos de memoria real: ";
+        for(int i : freed) 
+            cout << i << ", ";
+        cout << endl;
+    }
+    freed.clear();
+    for (int i = 0; i < S.size(); i++) {
+        if (S[i] == nProc) {
+            S[i] = -1;
+            freed.push_back(i);
+        }
+    }
+     if (!freed.empty()) {
+        cout << "Se liberan los marcos [ ";
+        for(int i : freed) 
+            cout << i << ", ";
+        cout << "] del area de swapping" << endl;
+    }
 }
 
 void wipeMemory(){
-    //WIP
+    M.clear();
+    S.clear();
 }
 
 int main() {
-    string name;
-    vector<int> M;
-    vector<int> S;
     vector<Command> cmds;
 
     cmds = readFile();
@@ -127,7 +154,7 @@ int main() {
             break;
 
         case 'L':
-            processL();
+            processL(cmds[i].getProcessNumber());
             break;
 
         case 'C':
