@@ -16,7 +16,7 @@ Command processCmd(string line) {
     switch (type) {
         case 'P': {
             space = line.find(" ");
-            int nBytes = stoi(line.substr(0, space-1));
+            int nBytes = stoi(line.substr(0, space));
             line = line.substr(space+1);
             nProc = stoi(line);
             //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
@@ -26,10 +26,10 @@ Command processCmd(string line) {
         
         case 'A': {
             space = line.find(" ");
-            int vDir = stoi(line.substr(0, space-1));
+            int vDir = stoi(line.substr(0, space));
             line = line.substr(space+1);
             space = line.find(" ");
-            nProc = stoi(line.substr(0, space-1));
+            nProc = stoi(line.substr(0, space));
             line = line.substr(space+1);
             if (stoi(line) == 1) {
                 modify = true;
@@ -42,10 +42,16 @@ Command processCmd(string line) {
         }
         
         case 'L': {
-            space = line.find(" ");
             nProc = stoi(line);
             //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
             cmd.setL(nProc);
+            break;
+        }
+
+        case 'C': {
+            Command cmd(type);
+            cmd.setC(line);
+            //TODO: try catch para error handling si stoi no jala, o no encuentra espacios
             break;
         }
             
@@ -64,15 +70,14 @@ Command processCmd(string line) {
             exit(0);
             break;
     }
-    
     return cmd;
 }
 
-vector<Command> readFile(string name) {
+vector<Command> readFile() {
     vector<Command> cmds;
     string line;
     ifstream file;
-    file.open(name);
+    file.open("ArchivoTrabajo.txt");
     if(file.fail()) {
         cout << "There was a problem while opening the file" << endl;
         exit(0);
@@ -86,14 +91,62 @@ vector<Command> readFile(string name) {
     return cmds;
 }
 
+void processP(){
+    //WIP
+}
+
+void processA(){
+    //WIP
+}
+
+void processL(){
+    //WIP
+}
+
+void wipeMemory(){
+    //WIP
+}
+
 int main() {
     string name;
     vector<int> M;
     vector<int> S;
     vector<Command> cmds;
 
-    cin >> name;
-    cmds = readFile(name);
+    cmds = readFile();
+
+    for (int i = 0; i < cmds.size(); i++) {
+        switch (cmds[i].getType())
+        {
+        case 'P':
+            processP();
+            break;
+        
+        case 'A':
+            processA();
+            break;
+
+        case 'L':
+            processL();
+            break;
+
+        case 'C':
+            cmds[i].print();
+            break;
+
+        case 'F':
+            wipeMemory();
+            break;
+
+        case 'E':
+            cout << "Bye! :) " << endl;
+            exit(0);
+            break;
+
+        default:
+            break;
+        }
+    }
     return 0;
 
 }
