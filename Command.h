@@ -12,6 +12,7 @@ public:
     void setC(string comment);
     void print();
     char getType();
+    int getProcessNumber();
     
 private:
     char type;
@@ -85,6 +86,10 @@ void Command::print() {
 
 char Command::getType() {
     return type;
+}
+
+int Command::getProcessNumber() {
+    return nProc;
 }
 
 #endif /* Command_h */
