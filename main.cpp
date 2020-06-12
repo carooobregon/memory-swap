@@ -114,7 +114,10 @@ vector<Command> readFile() {
 }
 
 void processP(Command cmd){
-    int pages = ceil(cmd.getNBytes()/16);
+    //cout << "NBytes = " << cmd.getNBytes() << endl;
+    //cout << "sos " << cmd.getNBytes()/16.0 << endl;
+    int pages = ceil(cmd.getNBytes()/16.0);
+    //cout << "pages = " << pages << endl;
     int count = 0;
     int pNum = cmd.getProcessNumber();
     vector<pair < char, int> > save;
@@ -185,7 +188,44 @@ void processP(Command cmd){
 }
 
 void processA(Command cmd){
+    int vDir = cmd.getVDir();
+    int nProc = cmd.getProcessNumber();
+    cout << "Obtener la dirección real correspondiente a la dirección virtual " << vDir << " del proceso " << cmd.getProcessNumber() << endl;
+    int dir = floor(vDir/16.0);
+    int mod = vDir%16;
+    char mem = pcb[nProc][dir].first;
+    int marco = pcb[nProc][dir].second;
 
+    if (cmd.isModified()) {
+        cout << "Página " << dir << " del proceso " << nProc << " modificada. " << endl;
+    }
+
+    for (int i = 0; i < 128; i++) {
+        if (i == dir) {
+            cout << "Dirección virtual: " << vDir << " Dirección real: " << vDir << endl;
+            return;
+        }
+    }
+
+    for (int i = 0; i < 128; i++) {
+        if (M[i] == -1) {
+            M[i] = nProc;
+            pcb[nProc].push_back(make_pair('m',i));
+            cout << "Se localizó la página "<< dir << " del proceso " << nProc << " que estaba en la posición " << marco << " de swapping y se cargo al marco " << i << endl;
+            cout << "Dirección virtual: " << vDir << " Dirección real: " << (16*i)+mod << endl;
+            return;
+        }        
+    }
+
+    for (int i = 0; i < 128; i++) {
+        if (M[i] != nProc) {
+            M[i] = nProc;
+            pcb[nProc].push_back(make_pair('m',i));
+            cout << "Se localizó la página "<< dir << " del proceso " << nProc << " que estaba en la posición " << marco << " de swapping y se cargo al marco " << i << endl;
+            cout << "Dirección virtual: " << vDir << " Dirección real: " << (16*i)+mod << endl;
+            return;
+        }        
+    }
 }
 
 void processL(int nProc){
