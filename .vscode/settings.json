@@ -7,6 +7,14 @@
         "vector": "cpp",
         "__split_buffer": "cpp",
         "deque": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "cmath": "cpp",
+        "__hash_table": "cpp",
+        "atomic": "cpp",
+        "filesystem": "cpp",
+        "ios": "cpp",
+        "system_error": "cpp",
+        "unordered_map": "cpp",
+        "utility": "cpp"
     }
 }

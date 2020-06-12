@@ -3,21 +3,23 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cmath> 
+#include <unordered_map> 
 
 #include "Command.h"
 
 using namespace std;
 
-vector<int> M;
-vector<int> S;
-
+int M[128]; //contigua
+int S[256]; //virtual
+unordered_map<int, vector<pair < char, int> > > pcb;
 
 Command processCmd(string line){
     char type = line[0];
     istringstream stream(line);
     Command cmd(type);
     string currWord;
-
+    //TODO: stoi error handling
     switch (type) {
         case 'P': {
             stream >> currWord;
@@ -37,7 +39,6 @@ Command processCmd(string line){
             stream >> currWord;
             int vDir, nProc;
             bool modif;
-
             stream >> currWord;
             vDir = stoi(currWord);
                 
@@ -77,6 +78,15 @@ Command processCmd(string line){
             cmd.setC(output);
             break;
         }
+
+        case 'E': {
+            break;
+        }
+
+        case 'F': {
+            break;
+        }
+
         default:
             cout << "The command " << type << " " << line << "is invalid" << endl;
             exit(0);
@@ -103,18 +113,85 @@ vector<Command> readFile() {
     return cmds;
 }
 
-void processP(){
-    //WIP
+void processP(Command cmd){
+    int pages = ceil(cmd.getNBytes()/16);
+    int count = 0;
+    int pNum = cmd.getProcessNumber();
+    vector<pair < char, int> > save;
+    vector<int> assignedM;
+    vector<int> assignedS;
+    vector<pair <int, int> > swapped;
+    cout << "Asignar " << cmd.getNBytes() << " bytes al proceso " << pNum << endl;
+    //intenta poner el proceso en los espacios vacios de M y S
+    for (int i = 0; i < 128 && count != pages; i++) {
+        if (M[i] == -1) {
+            M[i] = pNum;
+            count++;
+            assignedM.push_back(i);
+            save.push_back(make_pair('m',i));
+        }
+    }
+    for (int i = 0; i < 256 && count != pages; i++) {
+        if (S[i] == -1) {
+            S[i] = pNum;
+            count++;
+            assignedS.push_back(i);
+            save.push_back(make_pair('s',i));
+        }
+    }
+    //Si falta espacio, pon el proceso en los M y S overwritteando otros procesos
+    if (pages != count) { //si no cupo en los vacio
+        for (int i = 0; i < 256 && count != pages; i++) {
+            if (S[i] == -1) {
+                swapped.push_back(make_pair(i,S[i]));
+                S[i] = pNum;
+                count++;
+                assignedS.push_back(i);
+                save.push_back(make_pair('s',i));
+            }
+        }
+        for (int i = 0; i < 128 && count != pages; i++) {
+            if (M[i] != pNum) {
+                swapped.push_back(make_pair(i,M[i]));
+                M[i] = pNum;
+                count++;
+                assignedM.push_back(i);
+                save.push_back(make_pair('m',i));
+            }
+        }
+    }
+
+    pcb[pNum] = save;
+    
+    for (int i = 0; i < swapped.size(); i++) {
+        cout << "pagina " << swapped[i].first << " del proceso " << swapped[i].second << " swappeada para hacer espacio para el proceso " << pNum;
+    }
+
+    if (!assignedM.empty()) {
+        cout << "En la memoria M, se asignaron los marcos de pagina ";
+        for (int i = 0; i < assignedM.size(); i++) {
+            cout << assignedM[i] << ", ";
+        }
+        cout << "al proceso " << pNum << endl;
+    }
+
+    if (!assignedS.empty()) {
+        cout << "En la memoria S, se asignaron los marcos de pagina ";
+        for (int i = 0; i < assignedS.size(); i++) {
+            cout << assignedS[i] << ", ";
+        }
+        cout << "al proceso " << pNum << endl;
+    }
 }
 
-void processA(){
-    //WIP
+void processA(Command cmd){
+
 }
 
 void processL(int nProc){
     cout << "Liberar los marcos de pagina ocupados por el proceso " << nProc << endl;
     vector<int> freed;
-    for (int i = 0; i < M.size(); i++) {
+    for (int i = 0; i < 128; i++) {
         if (M[i] == nProc) {
             M[i] = -1;
             freed.push_back(i);
@@ -122,12 +199,12 @@ void processL(int nProc){
     }
     if (!freed.empty()) {
         cout << "Se liberan los marcos de memoria real: ";
-        for(int i : freed) 
-            cout << i << ", ";
+        for (int i = 0; i < freed.size(); i++) 
+            cout << freed[i] << ", ";
         cout << endl;
     }
     freed.clear();
-    for (int i = 0; i < S.size(); i++) {
+    for (int i = 0; i < 256; i++) {
         if (S[i] == nProc) {
             S[i] = -1;
             freed.push_back(i);
@@ -135,31 +212,33 @@ void processL(int nProc){
     }
      if (!freed.empty()) {
         cout << "Se liberan los marcos [ ";
-        for(int i : freed) 
-            cout << i << ", ";
+        for (int i = 0; i < freed.size(); i++) 
+            cout << freed[i] << ", ";
         cout << "] del area de swapping" << endl;
     }
 }
 
 void wipeMemory(){
-    M.clear();
-    S.clear();
+    memset(M, -1, sizeof(M));
+    memset(S, -1, sizeof(S));
 }
 
 int main() {
+    wipeMemory();
     vector<Command> cmds;
 
     cmds = readFile();
 
     for (int i = 0; i < cmds.size(); i++) {
+        cmds[i].print();
         switch (cmds[i].getType())
         {
         case 'P':
-            processP();
+            processP(cmds[i]);
             break;
         
         case 'A':
-            processA();
+            processA(cmds[i]);
             break;
 
         case 'L':
@@ -167,7 +246,6 @@ int main() {
             break;
 
         case 'C':
-            cmds[i].print();
             break;
 
         case 'F':
@@ -182,6 +260,7 @@ int main() {
         default:
             break;
         }
+        cout << endl;
     }
     return 0;
 

@@ -13,7 +13,10 @@ public:
     void print();
     char getType();
     int getProcessNumber();
-    
+    int getNBytes();
+    int getVDir();
+    bool isModified();
+
 private:
     char type;
     int nBytes; //for P process
@@ -90,6 +93,18 @@ char Command::getType() {
 
 int Command::getProcessNumber() {
     return nProc;
+}
+
+int Command::getNBytes() {
+    return nBytes;
+}
+
+int Command::getVDir() {
+    return vDir;
+}
+
+bool Command::isModified() {
+    return modify;
 }
 
 #endif /* Command_h */
