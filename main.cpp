@@ -298,7 +298,7 @@ void wipeMemory(){
         cout << "Turnaround del proceso #" << i+1 << " = " << timestamps[i] << endl;
     }
     timestamps.clear();
-    cout << "Turnaround promedio = " << turnaround/contProcesos << endl;
+    if(contProcesos) cout << "Turnaround promedio = " << turnaround/contProcesos << endl;
     turnaround = 0;
     contProcesos = 0;
     memset(M, -1, sizeof(M));
