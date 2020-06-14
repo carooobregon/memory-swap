@@ -3,3 +3,4 @@ main
 .vscode/settings.json
 .vscode/settings.json
 main.dSYM/Contents/Info.plist
+*.out
