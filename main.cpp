@@ -12,7 +12,10 @@ using namespace std;
 
 int M[128]; //contigua
 int S[256]; //virtual
+int contProcesos = 0;
+float turnaround = 0.0; 
 unordered_map<int, vector<pair < char, int> > > pcb;
+vector<float> timestamps;
 
 Command processCmd(string line){
     char type = line[0];
@@ -120,6 +123,8 @@ void processP(Command cmd){
     //cout << "pages = " << pages << endl;
     int count = 0;
     int pNum = cmd.getProcessNumber();
+    float timestamp = 0.0;
+    contProcesos++;
     vector<pair < char, int> > save;
     vector<int> assignedM;
     vector<int> assignedS;
@@ -130,6 +135,8 @@ void processP(Command cmd){
         if (M[i] == -1) {
             M[i] = pNum;
             count++;
+            timestamp++;
+            turnaround++;
             assignedM.push_back(i);
             save.push_back(make_pair('m',i));
         }
@@ -138,6 +145,8 @@ void processP(Command cmd){
         if (S[i] == -1) {
             S[i] = pNum;
             count++;
+            timestamp++;
+            turnaround++;
             assignedS.push_back(i);
             save.push_back(make_pair('s',i));
         }
@@ -149,6 +158,8 @@ void processP(Command cmd){
                 swapped.push_back(make_pair(i,S[i]));
                 S[i] = pNum;
                 count++;
+                timestamp++;
+                turnaround++;
                 assignedS.push_back(i);
                 save.push_back(make_pair('s',i));
             }
@@ -158,6 +169,8 @@ void processP(Command cmd){
                 swapped.push_back(make_pair(i,M[i]));
                 M[i] = pNum;
                 count++;
+                timestamp++;
+                turnaround++;
                 assignedM.push_back(i);
                 save.push_back(make_pair('m',i));
             }
@@ -165,6 +178,8 @@ void processP(Command cmd){
     }
 
     pcb[pNum] = save;
+
+    timestamps.push_back(timestamp);
     
     for (int i = 0; i < swapped.size(); i++) {
         cout << "pagina " << swapped[i].first << " del proceso " << swapped[i].second << " swappeada para hacer espacio para el proceso " << pNum;
@@ -195,14 +210,21 @@ void processA(Command cmd){
     int mod = vDir%16;
     char mem = pcb[nProc][dir].first;
     int marco = pcb[nProc][dir].second;
+    float timestamp = 0.0;
+    contProcesos++;
 
     if (cmd.isModified()) {
+        timestamp+=0.1;
+        turnaround+=0.1;
         cout << "Página " << dir << " del proceso " << nProc << " modificada. " << endl;
     }
 
     for (int i = 0; i < 128; i++) {
         if (i == dir) {
+            timestamp+=0.1;
+            turnaround+=0.1;
             cout << "Dirección virtual: " << vDir << " Dirección real: " << vDir << endl;
+            timestamps.push_back(timestamp);
             return;
         }
     }
@@ -211,8 +233,11 @@ void processA(Command cmd){
         if (M[i] == -1) {
             M[i] = nProc;
             pcb[nProc].push_back(make_pair('m',i));
+            timestamp+=0.1;
+            turnaround+=0.1;
             cout << "Se localizó la página "<< dir << " del proceso " << nProc << " que estaba en la posición " << marco << " de swapping y se cargo al marco " << i << endl;
             cout << "Dirección virtual: " << vDir << " Dirección real: " << (16*i)+mod << endl;
+            timestamps.push_back(timestamp);
             return;
         }        
     }
@@ -221,8 +246,11 @@ void processA(Command cmd){
         if (M[i] != nProc) {
             M[i] = nProc;
             pcb[nProc].push_back(make_pair('m',i));
+            timestamp+=0.1;
+            turnaround+=0.1;
             cout << "Se localizó la página "<< dir << " del proceso " << nProc << " que estaba en la posición " << marco << " de swapping y se cargo al marco " << i << endl;
             cout << "Dirección virtual: " << vDir << " Dirección real: " << (16*i)+mod << endl;
+            timestamps.push_back(timestamp);
             return;
         }        
     }
@@ -231,10 +259,14 @@ void processA(Command cmd){
 void processL(int nProc){
     cout << "Liberar los marcos de pagina ocupados por el proceso " << nProc << endl;
     vector<int> freed;
+    contProcesos++;
+    float timestamp = 0;
     for (int i = 0; i < 128; i++) {
         if (M[i] == nProc) {
             M[i] = -1;
             freed.push_back(i);
+            turnaround+=0.1;
+            timestamp+=0.1;
         }
     }
     if (!freed.empty()) {
@@ -248,6 +280,8 @@ void processL(int nProc){
         if (S[i] == nProc) {
             S[i] = -1;
             freed.push_back(i);
+            turnaround+=0.1;
+            timestamp+=0.1;
         }
     }
      if (!freed.empty()) {
@@ -256,9 +290,17 @@ void processL(int nProc){
             cout << freed[i] << ", ";
         cout << "] del area de swapping" << endl;
     }
+    timestamps.push_back(timestamp);
 }
 
 void wipeMemory(){
+    for(int i=0; i < timestamps.size(); i++){
+        cout << "Turnaround del proceso #" << i+1 << " = " << timestamps[i] << endl;
+    }
+    timestamps.clear();
+    cout << "Turnaround promedio = " << turnaround/contProcesos << endl;
+    turnaround = 0;
+    contProcesos = 0;
     memset(M, -1, sizeof(M));
     memset(S, -1, sizeof(S));
 }
