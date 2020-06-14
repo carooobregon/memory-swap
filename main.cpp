@@ -14,7 +14,7 @@ int M[128]; //contigua
 int S[256]; //virtual
 int contProcesos = 0;
 float turnaround = 0.0;
-unordered_map<int, vector<pair<char, int>>> pcb;
+unordered_map<int, vector<pair<char, int> > > pcb;
 vector<float> timestamps;
 
 Command processCmd(string line) {
@@ -118,18 +118,18 @@ vector<Command> readFile() {
 }
 
 void processP(Command cmd) {
-  //cout << "NBytes = " << cmd.getNBytes() << endl;
-  //cout << "sos " << cmd.getNBytes()/16.0 << endl;
+  // cout << "NBytes = " << cmd.getNBytes() << endl;
+  // cout << "sos " << cmd.getNBytes()/16.0 << endl;
   int pages = ceil(cmd.getNBytes() / 16.0);
   //cout << "pages = " << pages << endl;
   int count = 0;
   int pNum = cmd.getProcessNumber();
   float timestamp = 0.0;
   contProcesos++;
-  vector<pair<char, int>> save;
+  vector<pair<char, int> > save;
   vector<int> assignedM;
   vector<int> assignedS;
-  vector<pair<int, int>> swapped;
+  vector<pair<int, int> > swapped;
   cout << "Asignar " << cmd.getNBytes() << " bytes al proceso " << pNum << endl;
   //intenta poner el proceso en los espacios vacios de M y S
   for (int i = 0; i < 128 && count != pages; i++) {
@@ -155,8 +155,7 @@ void processP(Command cmd) {
   //Si falta espacio, pon el proceso en los M y S overwritteando otros procesos
   if (pages != count) { //si no cupo en los vacio
     for (int i = 0; i < 256 && count != pages; i++) {
-      if (S[i] == -1)
-      {
+      if (S[i] == -1) {
         swapped.push_back(make_pair(i, S[i]));
         S[i] = pNum;
         count++;
@@ -167,8 +166,7 @@ void processP(Command cmd) {
       }
     }
     for (int i = 0; i < 128 && count != pages; i++) {
-      if (M[i] != pNum)
-      {
+      if (M[i] != pNum) {
         swapped.push_back(make_pair(i, M[i]));
         M[i] = pNum;
         count++;
@@ -301,7 +299,7 @@ void wipeMemory() {
     cout << "Turnaround del proceso #" << i + 1 << " = " << timestamps[i] << endl;
   }
   timestamps.clear();
-  if (countProcesos)
+  if (contProcesos)
     cout << "Turnaround promedio = " << turnaround / contProcesos << endl;
   turnaround = 0;
   contProcesos = 0;
