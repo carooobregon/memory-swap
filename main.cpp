@@ -17,12 +17,12 @@ float turnaround = 0.0;
 unordered_map<int, vector<pair<char, int> > > pcb;
 vector<float> timestamps;
 
+//reads input and classifies information to fit existing commands
 Command processCmd(string line) {
   char type = line[0];
   istringstream stream(line);
   Command cmd(type);
   string currWord;
-  //TODO: stoi error handling
   switch (type) {
   case 'P': {
     stream >> currWord;
@@ -98,6 +98,7 @@ Command processCmd(string line) {
   return cmd;
 }
 
+//opens and reads input file, returns a vector of the commands that will be executed
 vector<Command> readFile() {
   vector<Command> cmds;
   string line;
@@ -118,10 +119,7 @@ vector<Command> readFile() {
 }
 
 void processP(Command cmd) {
-  // cout << "NBytes = " << cmd.getNBytes() << endl;
-  // cout << "sos " << cmd.getNBytes()/16.0 << endl;
   int pages = ceil(cmd.getNBytes() / 16.0);
-  //cout << "pages = " << pages << endl;
   int count = 0;
   int pNum = cmd.getProcessNumber();
   float timestamp = 0.0;
@@ -131,7 +129,7 @@ void processP(Command cmd) {
   vector<int> assignedS;
   vector<pair<int, int> > swapped;
   cout << "Asignar " << cmd.getNBytes() << " bytes al proceso " << pNum << endl;
-  //intenta poner el proceso en los espacios vacios de M y S
+  //tries to load the procces onto M memory
   for (int i = 0; i < 128 && count != pages; i++) {
     if (M[i] == -1) {
       M[i] = pNum;
@@ -142,6 +140,7 @@ void processP(Command cmd) {
       save.push_back(make_pair('m', i));
     }
   }
+  //tries to load the procces onto S memory (if M memory ran out)
   for (int i = 0; i < 256 && count != pages; i++) {
     if (S[i] == -1) {
       S[i] = pNum;
@@ -152,8 +151,8 @@ void processP(Command cmd) {
       save.push_back(make_pair('s', i));
     }
   }
-  //Si falta espacio, pon el proceso en los M y S overwritteando otros procesos
-  if (pages != count) { //si no cupo en los vacio
+  //If it's lacking space, overwrite other processes, start from M memory and goes into S 
+  if (pages != count) { //validate the process didn't fit into empty spaces
     for (int i = 0; i < 256 && count != pages; i++) {
       if (S[i] == -1) {
         swapped.push_back(make_pair(i, S[i]));
@@ -219,9 +218,9 @@ void processA(Command cmd) {
     turnaround += 0.1;
     cout << "Página " << dir << " del proceso " << nProc << " modificada. " << endl;
   }
-
+  //look for the process cmd in the M memory
   for (int i = 0; i < 128; i++) {
-    if (i == dir) {
+    if (i == dir) { //if it finds the process
       timestamp += 0.1;
       turnaround += 0.1;
       cout << "Dirección virtual: " << vDir << " Dirección real: " << vDir << endl;
@@ -229,9 +228,9 @@ void processA(Command cmd) {
       return;
     }
   }
-
+  //look for empty spaces in S memory to fit the process
   for (int i = 0; i < 128; i++) {
-    if (M[i] == -1) {
+    if (M[i] == -1) { //if it finds an empty space
       M[i] = nProc;
       pcb[nProc].push_back(make_pair('m', i));
       timestamp += 0.1;
@@ -242,9 +241,9 @@ void processA(Command cmd) {
       return;
     }
   }
-
+  //look for spaces with other processes in S memory to fit the process
   for (int i = 0; i < 128; i++) {
-    if (M[i] != nProc) {
+    if (M[i] != nProc) { //if it finds a space
       M[i] = nProc;
       pcb[nProc].push_back(make_pair('m', i));
       timestamp += 0.1;
@@ -262,6 +261,7 @@ void processL(int nProc) {
   vector<int> freed;
   contProcesos++;
   float timestamp = 0;
+  //liberate spaces in M memory
   for (int i = 0; i < 128; i++) {
     if (M[i] == nProc) {
       M[i] = -1;
@@ -277,6 +277,7 @@ void processL(int nProc) {
     cout << endl;
   }
   freed.clear();
+  //liberate spaces in S memory
   for (int i = 0; i < 256; i++) {
     if (S[i] == nProc) {
       S[i] = -1;
